@@ -9,13 +9,13 @@ namespace Lucy3D
 {
     public class Window : GameWindow
     {
-        private readonly float[] _vertices =
+        private readonly float[] vertices =
         {
             // Position         Texture coordinates
-             0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
-             0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-            -0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f, // top right
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom left
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f  // top left
         };
 
         private readonly uint[] _indices =
@@ -24,17 +24,17 @@ namespace Lucy3D
             1, 2, 3
         };
 
-        private int _elementBufferObject;
+        private int ebo;
 
-        private int _vertexBufferObject;
+        private int vbo;
 
-        private int _vertexArrayObject;
+        private int vao;
 
-        private Shader _shader;
+        private Shader shader;
 
-        private Texture _texture;
+        private Texture texture;
 
-        private Texture _texture2;
+        private Texture texture2;
 
         // The view and projection matrices have been removed as we don't need them here anymore.
         // They can now be found in the new camera class.
@@ -42,7 +42,7 @@ namespace Lucy3D
         // We need an instance of the new camera class so it can manage the view and projection matrix code.
         // We also need a boolean set to true to detect whether or not the mouse has been moved for the first time.
         // Finally, we add the last position of the mouse so we can calculate the mouse offset easily.
-        private Camera _camera;
+        private Camera camera;
 
         private bool _firstMove = true;
 
@@ -63,40 +63,40 @@ namespace Lucy3D
 
             GL.Enable(EnableCap.DepthTest);
 
-            _vertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(_vertexArrayObject);
+            vao = GL.GenVertexArray();
+            GL.BindVertexArray(vao);
 
-            _vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
+            vbo = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
 
-            _elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
+            ebo = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
             GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
 
-            _shader = new Shader("D:/Projects/c#/Lucy3D/Resources/shader.vert", "D:/Projects/c#/Lucy3D/Resources/shader.frag");
-            _shader.Use();
+            shader = new Shader("D:/Projects/c#/Lucy3D/Resources/shader.vert", "D:/Projects/c#/Lucy3D/Resources/shader.frag");
+            shader.Use();
 
-            var vertexLocation = _shader.GetAttribLocation("aPosition");
+            var vertexLocation = shader.GetAttribLocation("aPosition");
             GL.EnableVertexAttribArray(vertexLocation);
             GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
 
-            var texCoordLocation = _shader.GetAttribLocation("aTexCoord");
+            var texCoordLocation = shader.GetAttribLocation("aTexCoord");
             GL.EnableVertexAttribArray(texCoordLocation);
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
 
-            _texture = Texture.LoadFromFile("D:/Projects/c#/Lucy3D/Resources/container.png");
-            _texture.Use(TextureUnit.Texture0);
+            texture = Texture.LoadFromFile("D:/Projects/c#/Lucy3D/Resources/container.png");
+            texture.Use(TextureUnit.Texture0);
 
-            _texture2 = Texture.LoadFromFile("D:/Projects/c#/Lucy3D/Resources/awesomeface.png");
-            _texture2.Use(TextureUnit.Texture1);
+            texture2 = Texture.LoadFromFile("D:/Projects/c#/Lucy3D/Resources/awesomeface.png");
+            texture2.Use(TextureUnit.Texture1);
 
-            _shader.SetInt("texture0", 0);
-            _shader.SetInt("texture1", 1);
+            shader.SetInt("texture0", 0);
+            shader.SetInt("texture1", 1);
 
             // We initialize the camera so that it is 3 units back from where the rectangle is.
             // We also give it the proper aspect ratio.
-            _camera = new Camera(Vector3.UnitZ * 3, Size.X / (float)Size.Y);
+            camera = new Camera(Vector3.UnitZ * 3, Size.X / (float)Size.Y);
 
             // We make the mouse cursor invisible and captured so we can have proper FPS-camera movement.
             CursorGrabbed = true;
@@ -110,16 +110,16 @@ namespace Lucy3D
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            GL.BindVertexArray(_vertexArrayObject);
+            GL.BindVertexArray(vao);
 
-            _texture.Use(TextureUnit.Texture0);
-            _texture2.Use(TextureUnit.Texture1);
-            _shader.Use();
+            texture.Use(TextureUnit.Texture0);
+            texture2.Use(TextureUnit.Texture1);
+            shader.Use();
 
             var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_time));
-            _shader.SetMatrix4("model", model);
-            _shader.SetMatrix4("view", _camera.GetViewMatrix());
-            _shader.SetMatrix4("projection", _camera.GetProjectionMatrix());
+            shader.SetMatrix4("model", model);
+            shader.SetMatrix4("view", camera.GetViewMatrix());
+            shader.SetMatrix4("projection", camera.GetProjectionMatrix());
 
             GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
 
@@ -147,28 +147,28 @@ namespace Lucy3D
 
             if (input.IsKeyDown(Keys.W))
             {
-                _camera.Position += _camera.Front * cameraSpeed * (float)e.Time; // Forward
+                camera.Position += camera.Front * cameraSpeed * (float)e.Time; // Forward
             }
 
             if (input.IsKeyDown(Keys.S))
             {
-                _camera.Position -= _camera.Front * cameraSpeed * (float)e.Time; // Backwards
+                camera.Position -= camera.Front * cameraSpeed * (float)e.Time; // Backwards
             }
             if (input.IsKeyDown(Keys.A))
             {
-                _camera.Position -= _camera.Right * cameraSpeed * (float)e.Time; // Left
+                camera.Position -= camera.Right * cameraSpeed * (float)e.Time; // Left
             }
             if (input.IsKeyDown(Keys.D))
             {
-                _camera.Position += _camera.Right * cameraSpeed * (float)e.Time; // Right
+                camera.Position += camera.Right * cameraSpeed * (float)e.Time; // Right
             }
             if (input.IsKeyDown(Keys.Space))
             {
-                _camera.Position += _camera.Up * cameraSpeed * (float)e.Time; // Up
+                camera.Position += camera.Up * cameraSpeed * (float)e.Time; // Up
             }
             if (input.IsKeyDown(Keys.LeftShift))
             {
-                _camera.Position -= _camera.Up * cameraSpeed * (float)e.Time; // Down
+                camera.Position -= camera.Up * cameraSpeed * (float)e.Time; // Down
             }
 
             // Get the mouse state
@@ -187,8 +187,8 @@ namespace Lucy3D
                 _lastPos = new Vector2(mouse.X, mouse.Y);
 
                 // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
-                _camera.Yaw += deltaX * sensitivity;
-                _camera.Pitch -= deltaY * sensitivity; // Reversed since y-coordinates range from bottom to top
+                camera.Yaw += deltaX * sensitivity;
+                camera.Pitch -= deltaY * sensitivity; // Reversed since y-coordinates range from bottom to top
             }
         }
 
@@ -198,7 +198,7 @@ namespace Lucy3D
         {
             base.OnMouseWheel(e);
 
-            _camera.Fov -= e.OffsetY;
+            camera.Fov -= e.OffsetY;
         }
 
         protected override void OnResize(ResizeEventArgs e)
@@ -207,7 +207,7 @@ namespace Lucy3D
 
             GL.Viewport(0, 0, Size.X, Size.Y);
             // We need to update the aspect ratio once the window has been resized.
-            _camera.AspectRatio = Size.X / (float)Size.Y;
+            camera.AspectRatio = Size.X / (float)Size.Y;
         }
     }
 }
