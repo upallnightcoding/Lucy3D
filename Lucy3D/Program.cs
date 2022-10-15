@@ -9,9 +9,9 @@ namespace Lucy3D
     {
         private static void Main()
         {
-            //Render();
+            Render();
 
-            TestScript();
+            //TestScript();
         }
 
         private static void TestScript()
